@@ -81,6 +81,8 @@ qplot(Impressions, data=clickstream29, fill=Signed_In, main="Impressions by Sign
 ![](6306LiveSession8_403_files/figure-html/PlotsDemographics-3.png)<!-- -->
 
 ##Answer project questions
+### At this point I start using a dataset that has information for Signed In users, as the questions are about Age Group and the only cases where we have that information is of signed in users, and I also focused on observations with one click or more as the data is skewed to the right if not.
+
 
 ```r
 #With 0 Clicks
