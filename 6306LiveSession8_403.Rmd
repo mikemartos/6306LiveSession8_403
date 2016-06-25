@@ -3,9 +3,10 @@ title: "Post Live Session 8 - May 29th"
 author: "Mike Martos"
 date: "June 25, 2016"
 output:
+  pdf_document: default
   html_document:
     keep_md: yes
-  pdf_document: default
+  word_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -65,6 +66,7 @@ qplot(Impressions, data=clickstream29, fill=Signed_In, main="Impressions by Sign
 ```
 
 ##Answer project questions
+### At this point I start using a dataset that has information for Signed In users, as the questions are about Age Group and the only cases where we have that information is of signed in users, and I also focused on observations with one click or more as the data is skewed to the right if not.
 ```{r PlotsImpressions}
 #With 0 Clicks
 plot(clickstream29Age$AgeGroup, clickstream29Age$Impressions, main="Distribution Impressions")
