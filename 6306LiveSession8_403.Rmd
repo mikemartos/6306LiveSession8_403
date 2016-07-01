@@ -3,10 +3,9 @@ title: "Post Live Session 8 - May 29th"
 author: "Mike Martos"
 date: "June 25, 2016"
 output:
-  pdf_document: default
   html_document:
     keep_md: yes
-  word_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -18,83 +17,188 @@ library(ggplot2)
 library(vcd)
 ```
 
-##Download data 
+###Download data 
 ```{r downloadData}
 download("http://stat.columbia.edu/~rachel/datasets/nyt29.csv",
          destfile="./Data/Raw/clickstream29.csv")
 clickstream29 <- read.csv("./Data/Raw/clickstream29.csv")
 ```
-##Tidy data
-```{r procData}
+
+###Tidy data
+```{r tidyData}
 #Get min and max of age
 min <- min(clickstream29$Age)
 max <- max(clickstream29$Age)
 #Create breaks
 breaks <- c(min,18,24,34,44,54,64,max)
-#Create new field for AgeGroup and assign from breaks
-clickstream29$AgeGroup <- cut(clickstream29$Age, breaks, 
-                              labels = c("18-", "18-24", "25-34", "35-44", "45-54", "55-64", "65+"), 
-                              include.lowest = TRUE, ordered_result = TRUE)
 #Make the signed in a factor
 clickstream29$Signed_In <- factor(clickstream29$Signed_In)
 #Make the Gender in a factor
 clickstream29$Gender <- factor(clickstream29$Gender)
+#Make the Gender in a factor
+clickstream29$CTR <- clickstream29$Clicks/clickstream29$Impressions
+```
+
+###Create new field for ageGroup and assign from breaks
+```{r ageGroup}
+clickstream29$ageGroup <- cut(clickstream29$Age, breaks, 
+                              labels = c("18-", "18-24", "25-34", "35-44", "45-54", "55-64", "65+"), 
+                              include.lowest = TRUE, ordered_result = TRUE)
+```
+
+###Create new field for CTRGroup and assign from breaks, intervals closed on the left
+```{r CTRGroup}
+#Create breaks
+breaks <- c(0,0.2,0.4,0.6,0.8,1)
+clickstream29$CTRGroup <- cut(clickstream29$CTR, breaks, 
+                              labels = c("0.0-0.2", "0.2-0.4", "0.4-0.6", "0.6-0.8", "0.8-1.0"), 
+                              include.lowest = TRUE, ordered_result = TRUE, right = FALSE)
+```
+
+###Get the total number of Male, Impressions, Clicks and Signed_In (0=Female, 1=Male)
+```{r Counts}
+
+```
+
+
+###Remove some data and store in variables
+```{r subsetData}
 #Remove records with no ages
 clickstream29Age <- subset(clickstream29, clickstream29$Age > 0)
 #Subset records with clicks
 clickstream29Click <- subset(clickstream29Age, clickstream29Age$Clicks > 0)
-
-```
-##Store intermediate files
-```{r storeFileAgeGroup}
-write.csv(clickstream29, file = "./Data/ClickStream29AgeGroup.csv")
-write.csv(clickstream29Age, file = "./Data/ClickStream29AgeGroupWithAge.csv")
-write.csv(clickstream29Click, file = "./Data/ClickStream29AgeGroupWithAgeClicks.csv")
+#Subset records with Impressions > 0
+ImpSub <- subset(clickstream29, clickstream29$Impressions > 0)
 ```
 
-## Including Plots
-
-
-##Try to learn about the data
-```{r PlotsDemographics}
-#Show demographics of signed in users
-mosaic(~ AgeGroup + Gender, data = clickstream29Age, shade = TRUE, main="Demographics")
-#Distribution ages by Gender
-qplot(AgeGroup, data=clickstream29Age, fill=Gender, main="Distribution ages by Gender")
-#Distribution Impressions by Signed in
-qplot(Impressions, data=clickstream29, fill=Signed_In, main="Impressions by Signed in",binwidth = 0.5)
+###Store intermediate files
+```{r storeFileageGroup}
+write.csv(clickstream29, file = "./Data/ClickStream29ageGroup.csv")
+write.csv(clickstream29Age, file = "./Data/ClickStream29ageGroupWithAge.csv")
+write.csv(clickstream29Click, file = "./Data/ClickStream29ageGroupWithAgeClicks.csv")
+write.csv(ImpSub, file = "./Data/ImpSub.csv")
 ```
 
-##Answer project questions
-### At this point I start using a dataset that has information for Signed In users, as the questions are about Age Group and the only cases where we have that information is of signed in users, and I also focused on observations with one click or more as the data is skewed to the right if not.
-```{r PlotsImpressions}
-#With 0 Clicks
-plot(clickstream29Age$AgeGroup, clickstream29Age$Impressions, main="Distribution Impressions")
-plot(clickstream29Age$AgeGroup, clickstream29Age$Clicks/clickstream29Age$Impressions, main="Distribution CTR")
-#Removing 0 clicks
-plot(clickstream29Click$AgeGroup, clickstream29Click$Impressions, main="Distribution Impressions, With a click at least")
-plot(clickstream29Click$AgeGroup, clickstream29Click$Clicks/clickstream29Click$Impressions, 
-     main="Distribution CTR, With a click at least")
-#CTR Exploratory Data
-qplot(Clicks/Impressions, data=clickstream29Click, fill=AgeGroup, 
-      main="Click-Through-Rate by Age Group, Signed In Only",binwidth = 0.01)
-qplot(Clicks/Impressions, data=clickstream29Click, fill=Gender, 
-      main="Click-Through-Rate by Gender, Signed In Only",binwidth = 0.01)
+
+###Plot distributions of number impressions and click-through-rate for the age groups, the problem here is that the EDA showed the age, gender are only recorded for Signed_in users, thus the users that were not signed in will have 0 age and will have 0 as gender, which is not correct.
+```{r}
+plot(ImpSub$ageGroup, ImpSub$CTR, main="Distribution CTR")
+
 ```
 
-##Look at the data from other angles
-```{r PlotsImpressionsCont}
-#Impressions Exploratory Data
-qplot(Impressions, data=clickstream29, fill=AgeGroup, 
-      main="Impressions by Age Group",binwidth = 0.5)
-qplot(Impressions, data=clickstream29Age, fill=AgeGroup, 
+###Number or users registered as Male
+```{r CountMale}
+sum(ImpSub$Gender == 1)
+```
+
+###Summatory of number of impresions
+```{r CountImpressions}
+sum(ImpSub$Impressions)
+```
+
+###Summatory of number of clicks
+```{r CountClick}
+sum(ImpSub$Clicks)
+```
+
+###Number of users showing as signed in.
+```{r CountSigned}
+sum(ImpSub$Signed_In == 1)
+```
+
+###Mean of Age
+```{r meanAge}
+mean(ImpSub$Age)
+```
+
+###Mean of Impressions
+```{r meanImpressions}
+mean(ImpSub$Impressions)
+```
+
+###Mean of clicks
+```{r meanClick}
+mean(ImpSub$Clicks)
+```
+
+###Mean of CTR
+```{r meanCTR}
+mean(ImpSub$CTR)
+```
+
+###Mean of Percentage of males
+```{r pctMale}
+100 * sum(ImpSub$Gender == 1)/length(ImpSub$Gender)
+```
+
+###Mean of Percentage of Signed In
+```{r pctSignedIn}
+100 * sum(ImpSub$Signed_In == 1)/length(ImpSub$Gender)
+```
+
+###Mean of Impressions by AgeGroup
+```{r meanImpressionAge}
+aggregate(ImpSub[, 3], list(ImpSub$ageGroup), mean)
+```
+
+###Mean of clicks by AgeGroup
+```{r meanClickAge}
+aggregate(ImpSub[, 4], list(ImpSub$ageGroup), mean)
+```
+
+###Mean of CTR by AgeGroup
+```{r meanCTRAge}
+aggregate(ImpSub[, 6], list(ImpSub$ageGroup), mean)
+```
+
+###Percentage of Males by AgeGroup
+```{r pctMaleAge}
+sumAge <- aggregate(ImpSub$Gender == 1,list(ImpSub$ageGroup), sum)
+lenAge <- aggregate(ImpSub[, 6], list(ImpSub$ageGroup), length)
+merged <- merge(sumAge,lenAge,by="Group.1")
+names(merged) <- c("ageGroup","MalesQty","TotalQty")
+merged$pct <- round(100 * merged$MalesQty/merged$TotalQty,2)
+merged
+```
+
+###Percentage of signed in by AgeGroup, again, only signed in, show gender, that is why we get these results
+```{r pctSignedInAge}
+meanSigned <- aggregate(ImpSub$Signed_In == 1,list(ImpSub$ageGroup), sum)
+lenAge <- aggregate(ImpSub[, 6], list(ImpSub$ageGroup), length)
+merged <- merge(meanSigned,lenAge,by="Group.1")
+names(merged) <- c("ageGroup","SignedQty","TotalQty")
+merged$pct <- round(100 * merged$SignedQty/merged$TotalQty,2)
+merged
+```
+
+###Create a table of the CTRGroup vs AgeGroup counts
+```{r ctrGroupVsageGroup}
+table(ImpSub$CTRGroup, ImpSub$ageGroup)
+```
+
+###Plot distribution Impressions
+```{r}
+qplot(ImpSub$Impressions, main="Distribution Impressions", fill=ImpSub$ageGroup,binwidth = 0.5)
+
+```
+
+###Plot distribution CTR
+```{r}
+qplot(ImpSub$CTR, main="Distribution CTR", fill=ImpSub$ageGroup,binwidth = 0.05)
+
+```
+
+###As mentioned earlier, I found that only signed in users have real gender and age information recorded, the default age for that group of not signed user is 0, which shows in the previous two plots, give this I've decided to plot the last two graphics for only signed in users, for that I have Data.frame *clickstream29Age* which I calculated earlier in the process. **Note the change in the 18- group**
+```{r AdditionalPlots}
+qplot(Impressions, data=clickstream29Age, fill=ageGroup, 
       main="Impressions by Age Group, Signed In Only",binwidth = 0.5)
-qplot(Impressions, data=clickstream29Age, fill=Gender, 
-      main="Impressions by Age Group, Signed In Only",binwidth = 0.5)
 
+qplot(CTR, data=clickstream29Age, fill=ageGroup, 
+      main="Impressions by Age Group, Signed In Only",binwidth = 0.05)
 
 
 ```
+
 
 
        
