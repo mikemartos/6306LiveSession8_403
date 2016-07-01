@@ -1,10 +1,11 @@
-Repository created for the Live session 8
+Repository created for Post Live Assignment Session 8
 
 Data folder: Holds the raw data downloaded from the website, as well as some intermediate files created during the processing.
 
-# Post Live Session 8 - May 29th
+# Post Live Session 8 - June 29th
 Mike Martos  
-June 25, 2016  
+Introduction to Data Science 403
+July 1st, 2016  
 
 
 ```r
